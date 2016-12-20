@@ -7,6 +7,7 @@ import me.xkuyax.hdfilme.rest.api.FileUtils;
 import me.xkuyax.hdfilme.rest.api.FilmInfo;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.FilmSiteInfo;
+import me.xkuyax.hdfilme.rest.api.HDFilmeTv.SeriesSiteInfo;
 import me.xkuyax.hdfilme.rest.api.Login;
 import me.xkuyax.hdfilme.rest.api.downloadapi.BaseFileSupplier;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
@@ -54,7 +55,10 @@ public class ServiceController {
         return filmSiteInfo;
     }
 
-
+    @RequestMapping("/series")
+    public SeriesSiteInfo getSeries(@RequestParam(defaultValue = "1") int page) throws IOException {
+        return movieListDownloader.downloadSeries(page);
+    }
 
     @RequestMapping("/videoUrl")
     public VideoStreamLink videoUrl(@RequestParam String link, @RequestParam(defaultValue = "true") boolean cache) throws IOException {

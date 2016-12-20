@@ -2,35 +2,32 @@ package me.xkuyax.hdfilme.rest.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
 import me.xkuyax.hdfilme.rest.api.series.SeriesInfo;
+import me.xkuyax.hdfilme.rest.api.series.SeriesSiteParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import javax.print.Doc;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-import java.util.stream.IntStream;
 
 @Data
 public class HDFilmeTv {
 
     private final CacheDownloadHandler downloadHandler;
-    private final String BASE_URL = "http://hdfilme.tv/movie-movies?order_f=id&order_d=desc&per_page=%s%";
+    private final String MOVIE_URL = "http://hdfilme.tv/movie-movies?order_f=id&order_d=desc&per_page=%s%";
+    private final String SERIES_URL = "http://hdfilme.tv/movie-series?order_f=id&order_d=desc&per_page=%s%";
 
     public FilmSiteInfo downloadFilms(int site) throws IOException {
-        DownloadPageInfo pageInfo = downloadSite(BASE_URL, site);
-        return new FilmSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new FilmSiteParser(pageInfo
-                .getDocument()).parse());
+        DownloadPageInfo pageInfo = downloadSite(MOVIE_URL, site);
+        return new FilmSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new FilmSiteParser(pageInfo.getDocument()).parse());
     }
 
-    public SeriesInfo downloadSeries(int site) throws IOException{
-        DownloadPageInfo pageInfo = downloadSite(BASE_URL, site);
-        return new FilmSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new er(pageInfo
-                .getDocument()).parse());
+    public SeriesSiteInfo downloadSeries(int site) throws IOException {
+        DownloadPageInfo pageInfo = downloadSite(SERIES_URL, site);
+        return new SeriesSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new SeriesSiteParser(pageInfo.getDocument()).parse());
     }
 
     private DownloadPageInfo downloadSite(String baseUrl, int site) throws IOException {
@@ -57,22 +54,30 @@ public class HDFilmeTv {
 
     @Data
     @AllArgsConstructor
-    public static class FilmSiteInfo {
+    public static class SiteInfo<T> {
 
         private int currentSite;
         private int maxSite;
-        private List<FilmInfo> filmInfo;
+        private List<T> info;
 
     }
 
     @Data
-    @AllArgsConstructor
-    public static class SeriesSiteInfo {
+    @EqualsAndHashCode(callSuper = true)
+    public static class FilmSiteInfo extends SiteInfo<FilmInfo> {
 
-        private int currentSite;
-        private int maxSite;
-        private List<SeriesInfo> seriesInfos;
+        public FilmSiteInfo(int currentSite, int maxSite, List<FilmInfo> filmInfo) {
+            super(currentSite, maxSite, filmInfo);
+        }
+    }
 
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class SeriesSiteInfo extends SiteInfo<SeriesInfo> {
+
+        public SeriesSiteInfo(int currentSite, int maxSite, List<SeriesInfo> seriesInfo) {
+            super(currentSite, maxSite, seriesInfo);
+        }
     }
 
     @Data

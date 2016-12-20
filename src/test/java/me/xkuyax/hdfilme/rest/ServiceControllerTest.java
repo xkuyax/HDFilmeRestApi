@@ -15,10 +15,16 @@ public class ServiceControllerTest {
         System.out.println(serviceController.getMainMenu());
         FilmSiteInfo filmSiteInfo = serviceController.getFilms(1);
         System.out.println(filmSiteInfo.getCurrentSite());
-        VideoStreamDownloader videoStreamDownloader = new VideoStreamDownloader(serviceController.getDownloadHandler(), filmSiteInfo.getFilmInfo().get(0).getUrl(), true);
-        filmSiteInfo.getFilmInfo().forEach(filmInfo -> System.out.println(filmInfo.getUrl()));
+        VideoStreamDownloader videoStreamDownloader = new VideoStreamDownloader(serviceController.getDownloadHandler(), filmSiteInfo.getInfo().get(0).getUrl(), true);
+        filmSiteInfo.getInfo().forEach(filmInfo -> System.out.println(filmInfo.getUrl()));
         List<VideoStreamLink> videoStreamLinkList = videoStreamDownloader.getLinks();
         System.out.println(videoStreamLinkList.get(0));
         serviceController.filmInfo("http://hdfilme.tv/hacked-kein-leben-ist-sicher-2016-3987-info");
+    }
+
+    @Test
+    public void testSeries() throws Exception {
+        ServiceController serviceController = new ServiceController();
+        serviceController.getSeries(1);
     }
 }

@@ -2,11 +2,13 @@ package me.xkuyax.hdfilme.rest.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import me.xkuyax.hdfilme.rest.api.download.VideoDownloadLink;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class FilmInfo {
 
