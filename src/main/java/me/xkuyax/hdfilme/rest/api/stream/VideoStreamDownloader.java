@@ -8,6 +8,9 @@ import lombok.Data;
 import me.xkuyax.hdfilme.rest.api.FileUtils;
 import me.xkuyax.hdfilme.rest.api.QualityLevel;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -24,21 +27,33 @@ public class VideoStreamDownloader {
     private static final Gson gson = new Gson();
     private final CacheDownloadHandler downloadHandler;
     private final String url;
+    private final boolean cache;
 
     public List<VideoStreamLink> getLinks() throws IOException {
-        String html = downloadHandler.handleDownloadAsString(url, FileUtils.removeInvalidFileNameChars(url));
+        String html = cache ? getHtmlOffline() : getHtmlOnline();
         return Arrays.stream(html.split("\n")).map(line -> {
             if (line.contains("'sources' :")) {
                 String json = line.substring(line.indexOf("["), line.lastIndexOf(","));
                 JsonParser jsonParser = new JsonParser();
                 jsonParser.parse(json);
-                System.out.println(line);
-                System.out.println(json);
                 List<VideoStreamLink> links = gson.fromJson(json, LINK_TYPE);
-                links.forEach(videoStreamLink -> Arrays.stream(QualityLevel.values()).filter(qualityLevel -> videoStreamLink.getLabel().contains(qualityLevel.getIdentifier())).findFirst().ifPresent(videoStreamLink::setQualityLevel));
+                links.forEach(videoStreamLink -> {
+                    Arrays.stream(QualityLevel.values()).filter(qualityLevel -> videoStreamLink.getLabel().contains(qualityLevel.getIdentifier())).findFirst().ifPresent(videoStreamLink::setQualityLevel);
+                    videoStreamLink.setLabel(videoStreamLink.getLabel().substring(0, videoStreamLink.getLabel().length() - 1));
+                });
                 return links;
             }
             return null;
         }).filter(Objects::nonNull).findFirst().orElse(new ArrayList<>());
+    }
+
+    private String getHtmlOffline() throws IOException {
+        return downloadHandler.handleDownloadAsString(url, "film/" + FileUtils.removeInvalidFileNameChars(url));
+    }
+
+    private String getHtmlOnline() throws IOException {
+        try (CloseableHttpResponse httpResponse = downloadHandler.getHttpClient().execute(new HttpGet(url))) {
+            return EntityUtils.toString(httpResponse.getEntity());
+        }
     }
 }

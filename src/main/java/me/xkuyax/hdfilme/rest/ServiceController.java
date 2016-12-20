@@ -3,15 +3,19 @@ package me.xkuyax.hdfilme.rest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import me.xkuyax.hdfilme.rest.api.FileUtils;
 import me.xkuyax.hdfilme.rest.api.FilmInfo;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.FilmSiteInfo;
 import me.xkuyax.hdfilme.rest.api.Login;
 import me.xkuyax.hdfilme.rest.api.downloadapi.BaseFileSupplier;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
+import me.xkuyax.hdfilme.rest.api.info.FilmInfoParser;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamDownloader;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamLink;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 
 @RestController
 @Getter
@@ -34,6 +39,28 @@ public class ServiceController {
         BaseFileSupplier baseFileSupplier = () -> Paths.get("data");
         downloadHandler = new CacheDownloadHandler(httpClient, baseFileSupplier);
         movieListDownloader = new HDFilmeTv(downloadHandler);
+        Thread thread = new Thread(() -> {
+            try {
+                FilmSiteInfo filmSiteInfo = movieListDownloader.downloadSite(0);
+                int max = filmSiteInfo.getMaxSite();
+                for (int i = 0; i <= max; i++) {
+                    FilmSiteInfo filmSite = movieListDownloader.downloadSite(i * 50);
+                    ForkJoinPool forkJoinPool = new ForkJoinPool(32);
+                    forkJoinPool.submit(() -> {
+                        filmSite.getFilmInfo().parallelStream().forEach(filmInfo -> {
+                            try {
+                                videoUrl(filmInfo.getUrl(), true);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    });
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
     }
 
     @RequestMapping("/overview")
@@ -46,12 +73,31 @@ public class ServiceController {
     public FilmSiteInfo getFilms(@RequestParam(defaultValue = "1") int page) throws IOException {
         System.out.println("Got page " + page);
         FilmSiteInfo filmSiteInfo = movieListDownloader.downloadSite((page - 1) * 50);
-        for (FilmInfo filmInfo : filmSiteInfo.getFilmInfo()) {
-            VideoStreamDownloader videoStreamDownloader = new VideoStreamDownloader(downloadHandler, filmInfo.getUrl());
-            List<VideoStreamLink> links = videoStreamDownloader.getLinks();
-            filmInfo.setUrl(links.get(0).getFile());
-        }
         return filmSiteInfo;
+    }
+
+    @RequestMapping("/videoUrl")
+    public VideoStreamLink videoUrl(@RequestParam String link, @RequestParam(defaultValue = "true") boolean cache) throws IOException {
+        VideoStreamDownloader videoStreamDownloader = new VideoStreamDownloader(downloadHandler, link, cache);
+        List<VideoStreamLink> links = videoStreamDownloader.getLinks();
+        return links.get(0);
+    }
+
+    @RequestMapping("/filmInfo")
+    public FilmInfo filmInfo(@RequestParam String link) throws IOException {
+        String html = downloadHandler.handleDownloadAsString(link.replaceAll("-stream", "-info"), "info/" + FileUtils.removeInvalidFileNameChars(link));
+        Document document = Jsoup.parse(html);
+        FilmInfoParser infoParser = new FilmInfoParser(document);
+        FilmInfo filmInfo = infoParser.parse();
+        filmInfo.setUrl(link);
+        return filmInfo;
+    }
+
+    @RequestMapping("/thumbnail")
+    public byte[] thumbnail(@RequestParam String link) throws IOException {
+        System.out.println(link);
+        FilmInfo filmInfo = filmInfo(link);
+        return downloadHandler.handleDownload(filmInfo.getImageUrl(), "images/" + FileUtils.removeInvalidFileNameChars(link));
     }
 
     @Data
