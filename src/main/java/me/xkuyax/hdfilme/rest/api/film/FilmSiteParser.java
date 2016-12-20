@@ -1,4 +1,4 @@
-package me.xkuyax.hdfilme.rest.api;
+package me.xkuyax.hdfilme.rest.api.film;
 
 import lombok.Data;
 import org.jsoup.nodes.Document;

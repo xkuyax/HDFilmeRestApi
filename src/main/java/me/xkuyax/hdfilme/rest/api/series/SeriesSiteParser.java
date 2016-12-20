@@ -1,7 +1,7 @@
 package me.xkuyax.hdfilme.rest.api.series;
 
 import lombok.Data;
-import me.xkuyax.hdfilme.rest.api.FilmSiteParser;
+import me.xkuyax.hdfilme.rest.api.film.FilmSiteParser;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 

@@ -1,8 +1,8 @@
 package me.xkuyax.hdfilme.rest;
 
 import lombok.RequiredArgsConstructor;
-import me.xkuyax.hdfilme.rest.api.FilmInfo;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.SiteInfo;
+import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
 
 import java.io.IOException;
 import java.util.concurrent.ForkJoinPool;

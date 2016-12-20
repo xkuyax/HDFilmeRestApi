@@ -20,9 +20,7 @@ public class VideoDownloader {
         for (String line : lines) {
             if (line.contains("var kF")) {
                 String link = line.substring(line.indexOf('"'), line.lastIndexOf('"'));
-                System.out.println("link1: " + link);
                 link = link.replaceAll("\"\\+\"", "").substring(1);
-                System.out.println("link2: " + link);
                 VideoDownloadLinkParser videoDownloadLinkParser = new VideoDownloadLinkParser(downloadHandler, link, file + "_download.html");
                 links.addAll(videoDownloadLinkParser.parse());
             }

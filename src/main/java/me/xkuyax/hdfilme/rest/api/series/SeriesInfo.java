@@ -2,7 +2,7 @@ package me.xkuyax.hdfilme.rest.api.series;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.xkuyax.hdfilme.rest.api.FilmInfo;
+import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
 
 @Getter
 @Setter

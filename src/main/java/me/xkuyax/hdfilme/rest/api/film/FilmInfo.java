@@ -1,4 +1,4 @@
-package me.xkuyax.hdfilme.rest.api;
+package me.xkuyax.hdfilme.rest.api.film;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

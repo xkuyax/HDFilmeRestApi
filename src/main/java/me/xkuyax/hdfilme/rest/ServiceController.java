@@ -4,14 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import me.xkuyax.hdfilme.rest.api.FileUtils;
-import me.xkuyax.hdfilme.rest.api.FilmInfo;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.FilmSiteInfo;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.SeriesSiteInfo;
 import me.xkuyax.hdfilme.rest.api.Login;
 import me.xkuyax.hdfilme.rest.api.downloadapi.BaseFileSupplier;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
-import me.xkuyax.hdfilme.rest.api.info.FilmInfoParser;
+import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
+import me.xkuyax.hdfilme.rest.api.film.FilmInfoParser;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamDownloader;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamLink;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -44,13 +44,11 @@ public class ServiceController {
 
     @RequestMapping("/overview")
     public List<MenuType> getMainMenu() {
-        System.out.println("main menu");
         return Collections.singletonList(new MenuType("films", "Filme"));
     }
 
     @RequestMapping("/films")
     public FilmSiteInfo getFilms(@RequestParam(defaultValue = "1") int page) throws IOException {
-        System.out.println("Got page " + page);
         FilmSiteInfo filmSiteInfo = movieListDownloader.downloadFilms((page - 1) * 50);
         return filmSiteInfo;
     }
@@ -79,7 +77,6 @@ public class ServiceController {
 
     @RequestMapping("/thumbnail")
     public byte[] thumbnail(@RequestParam String link) throws IOException {
-        System.out.println(link);
         FilmInfo filmInfo = filmInfo(link);
         return downloadHandler.handleDownload(filmInfo.getImageUrl(), "images/" + FileUtils.removeInvalidFileNameChars(link));
     }

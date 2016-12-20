@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
+import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
+import me.xkuyax.hdfilme.rest.api.film.FilmSiteParser;
 import me.xkuyax.hdfilme.rest.api.series.SeriesInfo;
 import me.xkuyax.hdfilme.rest.api.series.SeriesSiteParser;
 import org.jsoup.Jsoup;
