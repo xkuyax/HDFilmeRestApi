@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 
 @RestController
 @Getter
@@ -39,28 +38,7 @@ public class ServiceController {
         BaseFileSupplier baseFileSupplier = () -> Paths.get("data");
         downloadHandler = new CacheDownloadHandler(httpClient, baseFileSupplier);
         movieListDownloader = new HDFilmeTv(downloadHandler);
-        Thread thread = new Thread(() -> {
-            try {
-                FilmSiteInfo filmSiteInfo = movieListDownloader.downloadSite(0);
-                int max = filmSiteInfo.getMaxSite();
-                for (int i = 0; i <= max; i++) {
-                    FilmSiteInfo filmSite = movieListDownloader.downloadSite(i * 50);
-                    ForkJoinPool forkJoinPool = new ForkJoinPool(32);
-                    forkJoinPool.submit(() -> {
-                        filmSite.getFilmInfo().parallelStream().forEach(filmInfo -> {
-                            try {
-                                videoUrl(filmInfo.getUrl(), true);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                    });
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        thread.start();
+        new DownloadThread(this).start();
     }
 
     @RequestMapping("/overview")
@@ -72,9 +50,11 @@ public class ServiceController {
     @RequestMapping("/films")
     public FilmSiteInfo getFilms(@RequestParam(defaultValue = "1") int page) throws IOException {
         System.out.println("Got page " + page);
-        FilmSiteInfo filmSiteInfo = movieListDownloader.downloadSite((page - 1) * 50);
+        FilmSiteInfo filmSiteInfo = movieListDownloader.downloadFilms((page - 1) * 50);
         return filmSiteInfo;
     }
+
+
 
     @RequestMapping("/videoUrl")
     public VideoStreamLink videoUrl(@RequestParam String link, @RequestParam(defaultValue = "true") boolean cache) throws IOException {

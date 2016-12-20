@@ -1,6 +1,8 @@
-package me.xkuyax.hdfilme.rest.api;
+package me.xkuyax.hdfilme.rest.api.series;
 
 import lombok.Data;
+import me.xkuyax.hdfilme.rest.api.FilmInfo;
+import me.xkuyax.hdfilme.rest.api.FilmSiteParser;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -10,12 +12,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
-public class VideoSiteParser {
+public class SeriesSiteParser {
 
     private final Document document;
 
     public List<FilmInfo> parse() {
-        return document.select(".box-product.clearfix").stream().map(VideoSiteParser::parseFilmInfo).collect(Collectors.toList());
+        return document.select(".box-product.clearfix").stream().map(FilmSiteParser::parseFilmInfo).collect(Collectors.toList());
     }
 
     public static FilmInfo parseFilmInfo(Element filmInfo) {
