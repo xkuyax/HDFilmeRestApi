@@ -23,18 +23,18 @@ public class HDFilmeTv {
     private final String SERIES_URL = "http://hdfilme.tv/movie-series?order_f=id&order_d=desc&per_page=%s%";
 
     public FilmSiteInfo downloadFilms(int site) throws IOException {
-        DownloadPageInfo pageInfo = downloadSite(MOVIE_URL, site);
+        DownloadPageInfo pageInfo = downloadSite(MOVIE_URL, "movies", site);
         return new FilmSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new FilmSiteParser(pageInfo.getDocument()).parse());
     }
 
     public SeriesSiteInfo downloadSeries(int site) throws IOException {
-        DownloadPageInfo pageInfo = downloadSite(SERIES_URL, site);
+        DownloadPageInfo pageInfo = downloadSite(SERIES_URL, "series", site);
         return new SeriesSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new SeriesSiteParser(pageInfo.getDocument()).parse());
     }
 
-    private DownloadPageInfo downloadSite(String baseUrl, int site) throws IOException {
+    private DownloadPageInfo downloadSite(String baseUrl, String prefix, int site) throws IOException {
         String url = baseUrl.replaceAll("%s%", site + "");
-        String html = downloadHandler.handleDownloadAsString(url, "moviesite-" + site + ".html");
+        String html = downloadHandler.handleDownloadAsString(url, prefix + "/moviesite-" + site + ".html");
         Document document = Jsoup.parse(html);
         int currentSite = 0;
         int maxSite = 0;

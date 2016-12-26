@@ -14,11 +14,22 @@ public class SeriesSiteParser {
     private final Document document;
 
     public List<SeriesInfo> parse() {
-        return document.select(".box-product.clearfix").stream().map(SeriesSiteParser::parseFilmInfo).collect(Collectors.toList());
+        return document.select(FilmSiteParser.CSS_ELEMENT_SELECTOR).stream().map(this::parseFilmInfo).collect(Collectors.toList());
     }
 
-    public static SeriesInfo parseFilmInfo(Element infoElement) {
-        SeriesInfo seriesInfo = FilmSiteParser.parseFilmInfo(infoElement, SeriesInfo::new);
+    public SeriesInfo parseFilmInfo(Element infoElement) {
+        FilmSiteParser filmSiteParser = new FilmSiteParser(document);
+        SeriesInfo seriesInfo = filmSiteParser.parseFilmInfo(infoElement, SeriesInfo::new);
+        String episode = infoElement.select(".episode").text();
+        seriesInfo.setMaxEpisodes(parseEpisode(episode, 1));
+        seriesInfo.setCurrentEpisodes(parseEpisode(episode, 2));
+        seriesInfo.setUrl(seriesInfo.getUrl() + "?episode=EPISODE");
         return seriesInfo;
+    }
+
+    private int parseEpisode(String episodeText, int index) {
+        String[] split = episodeText.split("\\/");
+        String text = split[split.length - (index >= split.length ? 1 : index)].trim();
+        return text.isEmpty() ? -1 : Integer.parseInt(text);
     }
 }

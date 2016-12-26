@@ -9,5 +9,6 @@ import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
 public class SeriesInfo extends FilmInfo {
 
     private int maxEpisodes;
+    private int currentEpisodes;
 
 }

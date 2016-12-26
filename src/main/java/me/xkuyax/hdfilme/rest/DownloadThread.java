@@ -15,35 +15,28 @@ public class DownloadThread extends Thread {
     @Override
     public void run() {
         try {
-            downloadAll((page) -> {
-                try {
-                    return serviceController.getFilms(page);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+            downloadAll(serviceController::getSeries, videoInfo -> {
+                for (int i = 1; i <= videoInfo.getCurrentEpisodes(); i++) {
+                    serviceController.videoUrl(videoInfo.getUrl(), true, i);
                 }
             });
-            downloadAll((page) -> {
-                try {
-                    return serviceController.getSeries(page);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            downloadAll(serviceController::getFilms, videoInfo -> serviceController.videoUrl(videoInfo.getUrl(), true, -1));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void downloadAll(SiteInfoSupplier siteInfoSupplier) throws IOException {
+    private <T extends FilmInfo> void downloadAll(SiteInfoSupplier<T> siteInfoSupplier, SiteInfoConsumer<T> videoInfoConsumer) throws IOException {
         SiteInfo filmSiteInfo = siteInfoSupplier.get(0);//serviceController.getMovieListDownloader().downloadFilms(0);
         int max = filmSiteInfo.getMaxSite();
-        for (int i = 0; i <= max; i++) {
-            SiteInfo<? extends FilmInfo> videoSite = siteInfoSupplier.get(i * 50);//serviceController.getMovieListDownloader().downloadFilms(i * 50);
+        for (int i = 0; i < max; i++) {
+            SiteInfo<T> videoSite = siteInfoSupplier.get(i * 50);//serviceController.getMovieListDownloader().downloadFilms(i * 50);
             ForkJoinPool forkJoinPool = new ForkJoinPool(32);
             forkJoinPool.submit(() -> {
                 videoSite.getInfo().parallelStream().forEach(videoInfo -> {
                     try {
-                        serviceController.videoUrl(videoInfo.getUrl(), true);
+                        videoInfoConsumer.accept(videoInfo);
+                        //
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -52,9 +45,15 @@ public class DownloadThread extends Thread {
         }
     }
 
-    public interface SiteInfoSupplier {
+    public interface SiteInfoConsumer<T extends FilmInfo> {
 
-        SiteInfo<? extends FilmInfo> get(int page);
+        void accept(T filmInfo) throws IOException;
+
+    }
+
+    public interface SiteInfoSupplier<T extends FilmInfo> {
+
+        SiteInfo<T> get(int page) throws IOException;
 
     }
 }

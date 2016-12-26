@@ -13,12 +13,23 @@ import java.util.List;
 public class FilmInfo {
 
     private String title;
+    private String searchTitle;
     private String url;
     private String imageUrl;
     private String description;
     private List<String> genres;
     private int views;
+    private int year;
     private float rating;
     private List<VideoDownloadLink> videoDownloadLinks;
 
+    public FilmInfo(String title, String image, String description) {
+        this.title = title;
+        this.imageUrl = image;
+        this.description = description;
+    }
+
+    public void setSearchTitle() {
+        setSearchTitle(title.replaceAll("\\([0-9]{1,}\\)", ""));
+    }
 }

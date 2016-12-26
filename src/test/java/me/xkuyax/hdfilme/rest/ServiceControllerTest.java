@@ -1,6 +1,8 @@
 package me.xkuyax.hdfilme.rest;
 
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.FilmSiteInfo;
+import me.xkuyax.hdfilme.rest.api.HDFilmeTv.SeriesSiteInfo;
+import me.xkuyax.hdfilme.rest.api.series.SeriesInfo;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamDownloader;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamLink;
 import org.junit.Test;
@@ -25,6 +27,17 @@ public class ServiceControllerTest {
     @Test
     public void testSeries() throws Exception {
         ServiceController serviceController = new ServiceController();
-        serviceController.getSeries(1);
+        SeriesSiteInfo siteInfo = serviceController.getSeries(0);
+        for (SeriesInfo seriesInfo : siteInfo.getInfo()) {
+            System.out.println(seriesInfo.getCurrentEpisodes() + " " + seriesInfo.getMaxEpisodes());
+        }
+    }
+
+    @Test
+    public void thumbnail() throws Exception {
+        String link = "http://hdfilme.tv/streetdance-new-york-2016-3999-stream";
+        ServiceController serviceController = new ServiceController();
+        serviceController.thumbnail(link, "21:9");
+        serviceController.thumbnail(link, "4:3");
     }
 }

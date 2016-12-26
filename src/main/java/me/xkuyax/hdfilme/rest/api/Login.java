@@ -130,7 +130,10 @@ public class Login {
         Files.write(Paths.get("useragent.txt"), USER_AGENT.getBytes());
         System.out.println("Got cookies and successfully fucked cloudflare :)");
         System.out.println("Saved user agent " + USER_AGENT + " to config");
-        webDriver.quit();
+        try {
+            webDriver.quit();
+        } catch (Throwable ignore) {
+        }
         System.out.println("Closed firefox");
     }
 }
