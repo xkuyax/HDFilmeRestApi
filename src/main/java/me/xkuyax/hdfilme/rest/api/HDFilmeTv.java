@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
 import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
 import me.xkuyax.hdfilme.rest.api.film.FilmSiteParser;
+import me.xkuyax.hdfilme.rest.api.search.SearchResults;
 import me.xkuyax.hdfilme.rest.api.series.SeriesInfo;
 import me.xkuyax.hdfilme.rest.api.series.SeriesSiteParser;
 import org.jsoup.Jsoup;
@@ -19,8 +20,9 @@ import java.util.List;
 public class HDFilmeTv {
 
     private final CacheDownloadHandler downloadHandler;
-    private final String MOVIE_URL = "http://hdfilme.tv/movie-movies?order_f=id&order_d=desc&per_page=%s%";
-    private final String SERIES_URL = "http://hdfilme.tv/movie-series?order_f=id&order_d=desc&per_page=%s%";
+    private final String MOVIE_URL = "http://hdfilme.tv/movie-movies?order_f=id&order_d=desc&page=%s%";
+    private final String SERIES_URL = "http://hdfilme.tv/movie-series?order_f=id&order_d=desc&page=%s%";
+    private final String SEARCH_URL = "http://hdfilme.tv/movie-search?key=%s%";
 
     public FilmSiteInfo downloadFilms(int site) throws IOException {
         DownloadPageInfo pageInfo = downloadSite(MOVIE_URL, "movies", site);
@@ -32,8 +34,13 @@ public class HDFilmeTv {
         return new SeriesSiteInfo(pageInfo.getCurrentSite(), pageInfo.getMaxSite(), new SeriesSiteParser(pageInfo.getDocument()).parse());
     }
 
+    public SearchResults downloadSearch(String query) {
+        return new SearchResults();
+    }
+
     private DownloadPageInfo downloadSite(String baseUrl, String prefix, int site) throws IOException {
         String url = baseUrl.replaceAll("%s%", site + "");
+        System.out.println(url);
         String html = downloadHandler.handleDownloadAsString(url, prefix + "/moviesite-" + site + ".html");
         Document document = Jsoup.parse(html);
         int currentSite = 0;

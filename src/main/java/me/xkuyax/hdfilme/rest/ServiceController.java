@@ -4,17 +4,18 @@ import info.movito.themoviedbapi.TmdbApi;
 import info.movito.themoviedbapi.model.MovieDb;
 import info.movito.themoviedbapi.model.core.MovieResultsPage;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import me.xkuyax.hdfilme.rest.api.FileUtils;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.FilmSiteInfo;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.SeriesSiteInfo;
 import me.xkuyax.hdfilme.rest.api.Login;
+import me.xkuyax.hdfilme.rest.api.QualityLevel;
 import me.xkuyax.hdfilme.rest.api.downloadapi.BaseFileSupplier;
 import me.xkuyax.hdfilme.rest.api.downloadapi.CacheDownloadHandler;
 import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
 import me.xkuyax.hdfilme.rest.api.film.FilmInfoParser;
+import me.xkuyax.hdfilme.rest.api.search.SearchResults;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamDownloader;
 import me.xkuyax.hdfilme.rest.api.stream.VideoStreamLink;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -55,7 +56,7 @@ public class ServiceController {
     @RequestMapping("/films")
     public FilmSiteInfo getFilms(@RequestParam(defaultValue = "1") int page) throws IOException {
         System.out.println(page);
-        FilmSiteInfo filmSiteInfo = movieListDownloader.downloadFilms((page - 1) * 50);
+        FilmSiteInfo filmSiteInfo = movieListDownloader.downloadFilms(page);
         return filmSiteInfo;
     }
 
@@ -72,7 +73,12 @@ public class ServiceController {
         }
         VideoStreamDownloader videoStreamDownloader = new VideoStreamDownloader(downloadHandler, link, cache);
         List<VideoStreamLink> links = videoStreamDownloader.getLinks();
-        return links.get(0);
+        if (links.size() < 1) {
+            //System.out.println("konnte keine links finden für " + link);
+            return new VideoStreamLink("null", "null", "null", QualityLevel.BULLSHIT);
+        } else {
+            return links.get(0);
+        }
     }
 
     @RequestMapping("/filmInfo")
@@ -93,7 +99,9 @@ public class ServiceController {
         if (resultsPage.getResults().size() > 0) {
             //System.out.println("found some shit "+link);
             MovieDb movieDb = resultsPage.getResults().get(0);
+
             String url = "https://image.tmdb.org/t/p/w500/" + (format.equals("21:9") ? movieDb.getBackdropPath() : movieDb.getPosterPath());
+
             return downloadHandler.handleDownload(url, "moviedb/" + FileUtils.removeInvalidFileNameChars(url));
         } else {
             //System.out.println("found no shit "+link);
@@ -101,7 +109,14 @@ public class ServiceController {
         return downloadHandler.handleDownload(filmInfo.getImageUrl(), "images/" + FileUtils.removeInvalidFileNameChars(link));
     }
 
-    @Data
+    @RequestMapping(value = "/search")
+    public SearchResults search(
+            @RequestParam
+                    String query) {
+
+        return movieListDownloader.downloadSearch(query);
+    }
+
     @AllArgsConstructor
     public static class MenuType {
 

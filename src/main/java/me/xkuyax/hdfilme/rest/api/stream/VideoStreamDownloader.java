@@ -33,12 +33,17 @@ public class VideoStreamDownloader {
         String html = cache ? getHtmlOffline() : getHtmlOnline();
         return Arrays.stream(html.split("\n")).map(line -> {
             if (line.contains("'sources' :")) {
+                if (!line.contains("[") || !line.contains(",")) {
+                    //System.out.println("Invalid string for getLinks! " + url);
+                    return new ArrayList<VideoStreamLink>();
+                }
                 String json = line.substring(line.indexOf("["), line.lastIndexOf(","));
                 JsonParser jsonParser = new JsonParser();
                 jsonParser.parse(json);
                 List<VideoStreamLink> links = gson.fromJson(json, LINK_TYPE);
                 links.forEach(videoStreamLink -> {
-                    Arrays.stream(QualityLevel.values()).filter(qualityLevel -> videoStreamLink.getLabel().contains(qualityLevel.getIdentifier())).findFirst().ifPresent(videoStreamLink::setQualityLevel);
+                    Arrays.stream(QualityLevel.values()).filter(qualityLevel -> videoStreamLink.getLabel().contains(qualityLevel.getIdentifier())).findFirst()
+                            .ifPresent(videoStreamLink::setQualityLevel);
                     videoStreamLink.setLabel(videoStreamLink.getLabel().substring(0, videoStreamLink.getLabel().length() - 1));
                 });
                 return links;

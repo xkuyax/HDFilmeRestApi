@@ -3,9 +3,9 @@ package me.xkuyax.hdfilme.rest;
 import lombok.RequiredArgsConstructor;
 import me.xkuyax.hdfilme.rest.api.HDFilmeTv.SiteInfo;
 import me.xkuyax.hdfilme.rest.api.film.FilmInfo;
+import me.xkuyax.utils.Lambdas;
 
-import java.io.IOException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 public class DownloadThread extends Thread {
@@ -15,45 +15,33 @@ public class DownloadThread extends Thread {
     @Override
     public void run() {
         try {
-            downloadAll(serviceController::getSeries, videoInfo -> {
-                for (int i = 1; i <= videoInfo.getCurrentEpisodes(); i++) {
-                    serviceController.videoUrl(videoInfo.getUrl(), true, i);
-                }
-            });
             downloadAll(serviceController::getFilms, videoInfo -> serviceController.videoUrl(videoInfo.getUrl(), true, -1));
-        } catch (IOException e) {
+            downloadAll(serviceController::getSeries, videoInfo -> {
+                Lambdas.parallelForEachInt(40, IntStream.rangeClosed(1, videoInfo.getCurrentEpisodes()), i -> serviceController.videoUrl(videoInfo.getUrl(), true, i));
+            });
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private <T extends FilmInfo> void downloadAll(SiteInfoSupplier<T> siteInfoSupplier, SiteInfoConsumer<T> videoInfoConsumer) throws IOException {
-        SiteInfo filmSiteInfo = siteInfoSupplier.get(0);//serviceController.getMovieListDownloader().downloadFilms(0);
+    private <T extends FilmInfo> void downloadAll(SiteInfoSupplier<T> siteInfoSupplier, SiteInfoConsumer<T> videoInfoConsumer) throws Exception {
+        SiteInfo filmSiteInfo = siteInfoSupplier.get(1);
         int max = filmSiteInfo.getMaxSite();
-        for (int i = 0; i < max; i++) {
-            SiteInfo<T> videoSite = siteInfoSupplier.get(i * 50);//serviceController.getMovieListDownloader().downloadFilms(i * 50);
-            ForkJoinPool forkJoinPool = new ForkJoinPool(32);
-            forkJoinPool.submit(() -> {
-                videoSite.getInfo().parallelStream().forEach(videoInfo -> {
-                    try {
-                        videoInfoConsumer.accept(videoInfo);
-                        //
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-            });
-        }
+        Lambdas.parallelForEachInt(max, IntStream.rangeClosed(1, max), i -> {
+            SiteInfo<T> videoSite = siteInfoSupplier.get(i);
+            Lambdas.parallelForEach(32, videoSite.getInfo().stream(), videoInfoConsumer::accept);
+        });
     }
 
     public interface SiteInfoConsumer<T extends FilmInfo> {
 
-        void accept(T filmInfo) throws IOException;
+        void accept(T filmInfo) throws Exception;
 
     }
 
     public interface SiteInfoSupplier<T extends FilmInfo> {
 
-        SiteInfo<T> get(int page) throws IOException;
+        SiteInfo<T> get(int page) throws Exception;
 
     }
 }
